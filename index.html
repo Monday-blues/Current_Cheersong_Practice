@@ -91,107 +91,6 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ─── PIN SCREEN ─── */
-  #screen-pin {
-    padding: 24px 0 80px;
-  }
-
-  .pin-card {
-    max-width: 360px;
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 36px 32px;
-    text-align: center;
-  }
-
-  .pin-who {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px;
-    color: var(--accent);
-    letter-spacing: 2px;
-    margin-bottom: 6px;
-  }
-
-  .pin-desc {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-bottom: 28px;
-  }
-
-  .pin-dots {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-bottom: 28px;
-  }
-
-  .pin-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: transparent;
-    transition: all 0.15s ease;
-  }
-
-  .pin-dot.filled {
-    background: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(200,162,255,0.5);
-  }
-
-  .pin-dot.error {
-    background: #f87171;
-    border-color: #f87171;
-    animation: shake 0.35s ease;
-  }
-
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%      { transform: translateX(-6px); }
-    60%      { transform: translateX(6px); }
-  }
-
-  .pin-keypad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .pin-key {
-    padding: 16px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 20px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.1s ease;
-    user-select: none;
-  }
-
-  .pin-key:hover { background: var(--border); border-color: var(--accent); }
-  .pin-key:active { transform: scale(0.94); }
-
-  .pin-key.del {
-    font-size: 16px;
-    color: var(--text-muted);
-  }
-
-  .pin-key.empty { visibility: hidden; cursor: default; }
-
-  .pin-error-msg {
-    margin-top: 16px;
-    font-size: 12px;
-    color: #f87171;
-    min-height: 18px;
-    transition: opacity 0.2s;
-  }
-
   /* ─── HOME SCREEN ─── */
   #screen-home {
     padding: 24px 0 80px;
@@ -607,36 +506,6 @@
     <button class="view-all-btn" onclick="goView()">📊 전체 진행도 확인</button>
   </div>
 
-  <!-- ── PIN SCREEN ── -->
-  <div id="screen-pin" class="screen">
-    <button class="back-btn" onclick="goHome()">← 뒤로</button>
-    <div class="pin-card">
-      <div class="pin-who" id="pin-who-label"></div>
-      <div class="pin-desc">공유 비밀번호 4자리를 입력하세요</div>
-      <div class="pin-dots">
-        <div class="pin-dot" id="dot-0"></div>
-        <div class="pin-dot" id="dot-1"></div>
-        <div class="pin-dot" id="dot-2"></div>
-        <div class="pin-dot" id="dot-3"></div>
-      </div>
-      <div class="pin-keypad">
-        <button class="pin-key" onclick="pinPress('1')">1</button>
-        <button class="pin-key" onclick="pinPress('2')">2</button>
-        <button class="pin-key" onclick="pinPress('3')">3</button>
-        <button class="pin-key" onclick="pinPress('4')">4</button>
-        <button class="pin-key" onclick="pinPress('5')">5</button>
-        <button class="pin-key" onclick="pinPress('6')">6</button>
-        <button class="pin-key" onclick="pinPress('7')">7</button>
-        <button class="pin-key" onclick="pinPress('8')">8</button>
-        <button class="pin-key" onclick="pinPress('9')">9</button>
-        <button class="pin-key empty" disabled></button>
-        <button class="pin-key" onclick="pinPress('0')">0</button>
-        <button class="pin-key del" onclick="pinDel()">⌫</button>
-      </div>
-      <div class="pin-error-msg" id="pin-error"></div>
-    </div>
-  </div>
-
   <!-- ── EDIT SCREEN ── -->
   <div id="screen-edit" class="screen">
     <button class="back-btn" onclick="goHome()">← 뒤로</button>
@@ -677,12 +546,9 @@ const BRANCH = 'main';
 const CONFIG_PATH   = 'config.json';
 const PROGRESS_PATH = 'progress.json';
 
-const PIN = '1989'; // ← 공유 비밀번호
-
 let config        = null;
 let progress      = null;
 let currentMember = null;
-let pinBuffer     = '';
 
 const STATUS_MAP   = { '미완성': 'none', '연습중': 'practice', '완성': 'done' };
 const STATUS_LABEL = { none: '미완성', practice: '연습중', done: '완성' };
@@ -715,24 +581,31 @@ function getStatus(member, song) {
 }
 
 // ─── GITHUB SAVE ─────────────────────────────────────────────────
-// config.json에 저장된 token 키를 사용 (있을 경우)
-// 없으면 REPO가 public이므로 API token 없이도 읽기 가능
-// 쓰기용 토큰은 config.json의 "token" 필드에 넣거나 아래 직접 입력
-const GH_TOKEN = config?.token || '';  // config.json에 "token": "ghp_xxx" 추가 가능
-
-async function saveProgress() {
-  // 저장용 토큰: config.json의 token 필드 또는 localStorage 캐시
-  let tok = (config && config.token) ? config.token : localStorage.getItem('gh_tok') || '';
+function getToken() {
+  let tok = localStorage.getItem('gh_tok');
   if (!tok) {
-    tok = prompt('GitHub Token을 입력하세요 (관리자용, 최초 1회):');
-    if (!tok) return;
+    tok = prompt('GitHub Personal Access Token을 입력하세요 (최초 1회):');
+    if (!tok) return null;
     localStorage.setItem('gh_tok', tok);
   }
+  return tok;
+}
+
+async function saveProgress() {
+  const tok = getToken();
+  if (!tok) return;
+
   try {
     const metaRes = await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
       { headers: { Authorization: `Bearer ${tok}` } }
     );
+    // 토큰이 틀렸으면 저장된 토큰 삭제 후 안내
+    if (metaRes.status === 401) {
+      localStorage.removeItem('gh_tok');
+      alert('토큰이 유효하지 않습니다. 다음 저장 시 다시 입력해 주세요.');
+      return;
+    }
     if (!metaRes.ok) throw new Error('파일 정보 조회 실패');
     const { sha } = await metaRes.json();
 
@@ -779,68 +652,9 @@ function renderHome() {
         <span class="stat-badge practice">연습중 ${practice}</span>
         <span class="stat-badge none">미완성 ${none}</span>
       </div>`;
-    card.onclick = () => goPin(name);
+    card.onclick = () => goEdit(name);
     grid.appendChild(card);
   });
-}
-
-// ─── PIN SCREEN ──────────────────────────────────────────────────
-function goPin(name) {
-  currentMember = name;
-  pinBuffer = '';
-  document.getElementById('pin-who-label').textContent = name;
-  document.getElementById('pin-error').textContent = '';
-  updateDots();
-  showScreen('pin');
-  // 키보드 지원
-  document.addEventListener('keydown', onKeyDown);
-}
-
-function onKeyDown(e) {
-  if (e.key >= '0' && e.key <= '9') pinPress(e.key);
-  else if (e.key === 'Backspace') pinDel();
-}
-
-function pinPress(digit) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += digit;
-  updateDots();
-  if (pinBuffer.length === 4) {
-    setTimeout(checkPin, 120);
-  }
-}
-
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updateDots();
-  document.getElementById('pin-error').textContent = '';
-}
-
-function updateDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('dot-' + i);
-    dot.classList.remove('filled', 'error');
-    if (i < pinBuffer.length) dot.classList.add('filled');
-  }
-}
-
-function checkPin() {
-  if (pinBuffer === PIN) {
-    document.removeEventListener('keydown', onKeyDown);
-    goEdit(currentMember);
-  } else {
-    // 틀렸을 때 빨간 애니메이션
-    for (let i = 0; i < 4; i++) {
-      const dot = document.getElementById('dot-' + i);
-      dot.classList.remove('filled');
-      dot.classList.add('error');
-    }
-    document.getElementById('pin-error').textContent = '비밀번호가 틀렸습니다';
-    setTimeout(() => {
-      pinBuffer = '';
-      updateDots();
-    }, 600);
-  }
 }
 
 // ─── EDIT SCREEN ─────────────────────────────────────────────────
@@ -955,7 +769,6 @@ function showScreen(name) {
 }
 
 function goHome() {
-  document.removeEventListener('keydown', onKeyDown);
   renderHome();
   showScreen('home');
 }
