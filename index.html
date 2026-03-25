@@ -91,6 +91,107 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
+  /* ─── PIN SCREEN ─── */
+  #screen-pin {
+    padding: 24px 0 80px;
+  }
+
+  .pin-card {
+    max-width: 360px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    text-align: center;
+  }
+
+  .pin-who {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .pin-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+  .pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .pin-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: all 0.15s ease;
+  }
+
+  .pin-dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(200,162,255,0.5);
+  }
+
+  .pin-dot.error {
+    background: #f87171;
+    border-color: #f87171;
+    animation: shake 0.35s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    60%      { transform: translateX(6px); }
+  }
+
+  .pin-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .pin-key {
+    padding: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    user-select: none;
+  }
+
+  .pin-key:hover { background: var(--border); border-color: var(--accent); }
+  .pin-key:active { transform: scale(0.94); }
+
+  .pin-key.del {
+    font-size: 16px;
+    color: var(--text-muted);
+  }
+
+  .pin-key.empty { visibility: hidden; cursor: default; }
+
+  .pin-error-msg {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #f87171;
+    min-height: 18px;
+    transition: opacity 0.2s;
+  }
+
   /* ─── HOME SCREEN ─── */
   #screen-home {
     padding: 24px 0 80px;
@@ -506,6 +607,36 @@
     <button class="view-all-btn" onclick="goView()">📊 전체 진행도 확인</button>
   </div>
 
+  <!-- ── PIN SCREEN ── -->
+  <div id="screen-pin" class="screen">
+    <button class="back-btn" onclick="goHome()">← 뒤로</button>
+    <div class="pin-card">
+      <div class="pin-who" id="pin-who-label"></div>
+      <div class="pin-desc">공유 비밀번호 4자리를 입력하세요</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="pinPress('1')">1</button>
+        <button class="pin-key" onclick="pinPress('2')">2</button>
+        <button class="pin-key" onclick="pinPress('3')">3</button>
+        <button class="pin-key" onclick="pinPress('4')">4</button>
+        <button class="pin-key" onclick="pinPress('5')">5</button>
+        <button class="pin-key" onclick="pinPress('6')">6</button>
+        <button class="pin-key" onclick="pinPress('7')">7</button>
+        <button class="pin-key" onclick="pinPress('8')">8</button>
+        <button class="pin-key" onclick="pinPress('9')">9</button>
+        <button class="pin-key empty" disabled></button>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>
+      <div class="pin-error-msg" id="pin-error"></div>
+    </div>
+  </div>
+
   <!-- ── EDIT SCREEN ── -->
   <div id="screen-edit" class="screen">
     <button class="back-btn" onclick="goHome()">← 뒤로</button>
@@ -546,17 +677,14 @@ const BRANCH = 'main';
 const CONFIG_PATH   = 'config.json';
 const PROGRESS_PATH = 'progress.json';
 
-let config   = null;   // { members, songs, statuses }
-let progress = null;   // { progress: { memberName: { songName: status } } }
-let token    = localStorage.getItem('gh_token') || '';
-let currentMember = null;
+const PIN = '1989'; // ← 공유 비밀번호
 
-// Status key mapping
-const STATUS_MAP = {
-  '미완성': 'none',
-  '연습중': 'practice',
-  '완성':   'done'
-};
+let config        = null;
+let progress      = null;
+let currentMember = null;
+let pinBuffer     = '';
+
+const STATUS_MAP   = { '미완성': 'none', '연습중': 'practice', '완성': 'done' };
 const STATUS_LABEL = { none: '미완성', practice: '연습중', done: '완성' };
 const STATUS_CLASS = { none: 'chip-none', practice: 'chip-practice', done: 'chip-done' };
 const BTN_CLASS    = { none: 'active-none', practice: 'active-practice', done: 'active-done' };
@@ -568,7 +696,6 @@ async function init() {
     await loadProgress();
     renderHome();
   } catch(e) {
-    console.error(e);
     alert('데이터 로드 실패: GitHub 설정을 확인하세요.\n' + e.message);
   }
 }
@@ -588,28 +715,33 @@ function getStatus(member, song) {
 }
 
 // ─── GITHUB SAVE ─────────────────────────────────────────────────
+// config.json에 저장된 token 키를 사용 (있을 경우)
+// 없으면 REPO가 public이므로 API token 없이도 읽기 가능
+// 쓰기용 토큰은 config.json의 "token" 필드에 넣거나 아래 직접 입력
+const GH_TOKEN = config?.token || '';  // config.json에 "token": "ghp_xxx" 추가 가능
+
 async function saveProgress() {
-  if (!token) {
-    token = prompt('GitHub Personal Access Token을 입력하세요 (최초 1회):');
-    if (!token) return;
-    localStorage.setItem('gh_token', token);
+  // 저장용 토큰: config.json의 token 필드 또는 localStorage 캐시
+  let tok = (config && config.token) ? config.token : localStorage.getItem('gh_tok') || '';
+  if (!tok) {
+    tok = prompt('GitHub Token을 입력하세요 (관리자용, 최초 1회):');
+    if (!tok) return;
+    localStorage.setItem('gh_tok', tok);
   }
   try {
-    // Get current SHA
     const metaRes = await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${tok}` } }
     );
-    const meta = await metaRes.json();
-    const sha  = meta.sha;
+    if (!metaRes.ok) throw new Error('파일 정보 조회 실패');
+    const { sha } = await metaRes.json();
 
-    // Commit updated progress
     const body = JSON.stringify({ progress: progress.progress }, null, 2);
     const commitRes = await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
       {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: `Update: ${currentMember} 진행도`,
           content: btoa(unescape(encodeURIComponent(body))),
@@ -620,7 +752,6 @@ async function saveProgress() {
     if (!commitRes.ok) throw new Error('저장 실패');
     showSaveBanner();
   } catch(e) {
-    console.error(e);
     alert('저장 실패: ' + e.message);
   }
 }
@@ -636,12 +767,10 @@ function renderHome() {
   const grid = document.getElementById('member-grid');
   grid.innerHTML = '';
   config.members.forEach(name => {
-    const songs = config.songs;
-    const done     = songs.filter(s => getStatus(name, s) === 'done').length;
-    const practice = songs.filter(s => getStatus(name, s) === 'practice').length;
-    const none     = songs.length - done - practice;
-
-    const card = document.createElement('div');
+    const done     = config.songs.filter(s => getStatus(name, s) === 'done').length;
+    const practice = config.songs.filter(s => getStatus(name, s) === 'practice').length;
+    const none     = config.songs.length - done - practice;
+    const card     = document.createElement('div');
     card.className = 'member-card';
     card.innerHTML = `
       <div class="member-name">${name}</div>
@@ -650,14 +779,72 @@ function renderHome() {
         <span class="stat-badge practice">연습중 ${practice}</span>
         <span class="stat-badge none">미완성 ${none}</span>
       </div>`;
-    card.onclick = () => goEdit(name);
+    card.onclick = () => goPin(name);
     grid.appendChild(card);
   });
 }
 
+// ─── PIN SCREEN ──────────────────────────────────────────────────
+function goPin(name) {
+  currentMember = name;
+  pinBuffer = '';
+  document.getElementById('pin-who-label').textContent = name;
+  document.getElementById('pin-error').textContent = '';
+  updateDots();
+  showScreen('pin');
+  // 키보드 지원
+  document.addEventListener('keydown', onKeyDown);
+}
+
+function onKeyDown(e) {
+  if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+  else if (e.key === 'Backspace') pinDel();
+}
+
+function pinPress(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updateDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(checkPin, 120);
+  }
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.remove('filled', 'error');
+    if (i < pinBuffer.length) dot.classList.add('filled');
+  }
+}
+
+function checkPin() {
+  if (pinBuffer === PIN) {
+    document.removeEventListener('keydown', onKeyDown);
+    goEdit(currentMember);
+  } else {
+    // 틀렸을 때 빨간 애니메이션
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('dot-' + i);
+      dot.classList.remove('filled');
+      dot.classList.add('error');
+    }
+    document.getElementById('pin-error').textContent = '비밀번호가 틀렸습니다';
+    setTimeout(() => {
+      pinBuffer = '';
+      updateDots();
+    }, 600);
+  }
+}
+
 // ─── EDIT SCREEN ─────────────────────────────────────────────────
 function goEdit(name) {
-  currentMember = name;
   document.getElementById('edit-name-label').textContent = name;
   document.getElementById('save-banner').classList.remove('show');
 
@@ -688,22 +875,19 @@ function goEdit(name) {
 }
 
 function setStatus(member, song, status, btn) {
-  // Update data
   if (!progress.progress[member]) progress.progress[member] = {};
   progress.progress[member][song] = status;
 
-  // Update buttons UI
   const toggle = btn.closest('.status-toggle');
   toggle.querySelectorAll('.status-btn').forEach(b => {
     b.classList.remove('active-none','active-practice','active-done');
   });
   btn.classList.add(BTN_CLASS[status]);
 
-  // Debounced save
-  clearTimeout(btn._saveTimer);
-  btn._saveTimer = setTimeout(() => {
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(() => {
     saveProgress();
-    renderHome(); // refresh stats
+    renderHome();
   }, 800);
 }
 
@@ -715,8 +899,7 @@ function goView() {
 }
 
 function buildTableHead() {
-  const tr = document.getElementById('table-head');
-  tr.innerHTML = `
+  document.getElementById('table-head').innerHTML = `
     <th style="width:36px"></th>
     <th class="song-col">응원곡</th>
     <th class="song-progress-col">완료율</th>
@@ -724,23 +907,19 @@ function buildTableHead() {
 }
 
 function renderTable() {
-  const query = document.getElementById('search-input').value.trim().toLowerCase();
-  const tbody = document.getElementById('table-body');
+  const query   = document.getElementById('search-input').value.trim().toLowerCase();
+  const tbody   = document.getElementById('table-body');
   const countEl = document.getElementById('result-count');
 
-  // Score = done*2 + practice*1 (정렬 기준)
   let rows = config.songs.map(song => {
-    const statuses = config.members.map(m => getStatus(m, song));
-    const score = statuses.reduce((acc, s) => acc + (s === 'done' ? 2 : s === 'practice' ? 1 : 0), 0);
+    const statuses  = config.members.map(m => getStatus(m, song));
+    const score     = statuses.reduce((a, s) => a + (s==='done'?2:s==='practice'?1:0), 0);
     const doneCount = statuses.filter(s => s === 'done').length;
-    const pct = Math.round((doneCount / config.members.length) * 100);
+    const pct       = Math.round((doneCount / config.members.length) * 100);
     return { song, statuses, score, pct };
   });
 
-  // Filter
   if (query) rows = rows.filter(r => r.song.toLowerCase().includes(query));
-
-  // Sort by score desc
   rows.sort((a, b) => b.score - a.score);
 
   countEl.textContent = `${rows.length}개 곡`;
@@ -758,16 +937,14 @@ function renderTable() {
         <div style="font-size:11px;color:var(--text-muted);text-align:center">${r.pct}%</div>
         <div class="progress-bar-wrap"><div class="progress-bar" style="width:${r.pct}%"></div></div>
       </td>
-      ${r.statuses.map(s => `
-        <td><span class="status-chip ${STATUS_CLASS[s]}">${STATUS_LABEL[s]}</span></td>
-      `).join('')}
+      ${r.statuses.map(s => `<td><span class="status-chip ${STATUS_CLASS[s]}">${STATUS_LABEL[s]}</span></td>`).join('')}
     </tr>`).join('');
 }
 
 function highlight(text, query) {
   if (!query) return text;
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
-  return text.replace(regex, '<mark style="background:rgba(200,162,255,0.3);color:var(--accent);border-radius:2px;padding:0 2px">$1</mark>');
+  const rx = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(rx, '<mark style="background:rgba(200,162,255,0.3);color:var(--accent);border-radius:2px;padding:0 2px">$1</mark>');
 }
 
 // ─── NAVIGATION ──────────────────────────────────────────────────
@@ -778,6 +955,7 @@ function showScreen(name) {
 }
 
 function goHome() {
+  document.removeEventListener('keydown', onKeyDown);
   renderHome();
   showScreen('home');
 }
