@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>응원곡 진행도 트래커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3a;
+    --accent: #c8a2ff;
+    --accent2: #7dd3fc;
+    --accent3: #86efac;
+    --text: #e8e8f0;
+    --text-muted: #6b6b85;
+    --none-color: #3a3a4a;
+    --practice-color: #7dd3fc;
+    --done-color: #86efac;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,162,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,162,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+  }
+
+  .header-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    letter-spacing: 2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    letter-spacing: 1px;
+  }
+
+  /* ─── SCREEN SYSTEM ─── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ─── HOME SCREEN ─── */
+  #screen-home {
+    padding: 24px 0 80px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    padding-left: 4px;
+  }
+
+  .member-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .member-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .member-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .member-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(200,162,255,0.12);
+  }
+
+  .member-card:hover::before { transform: scaleX(1); }
+
+  .member-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .member-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stat-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  .stat-badge.done { background: rgba(134,239,172,0.15); color: var(--done-color); }
+  .stat-badge.practice { background: rgba(125,211,252,0.15); color: var(--practice-color); }
+  .stat-badge.none { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .view-all-btn {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+  }
+
+  .view-all-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(125,211,252,0.05);
+  }
+
+  /* ─── EDIT SCREEN ─── */
+  #screen-edit {
+    padding: 24px 0 80px;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: 32px;
+    padding: 8px 0;
+    background: none;
+    border: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: color 0.2s;
+  }
+
+  .back-btn:hover { color: var(--text); }
+
+  .edit-header {
+    margin-bottom: 32px;
+  }
+
+  .edit-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .edit-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .save-banner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: rgba(134,239,172,0.1);
+    border: 1px solid rgba(134,239,172,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--done-color);
+    margin-bottom: 24px;
+  }
+  .save-banner.show { display: flex; }
+
+  .song-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .song-row {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .song-row:hover { border-color: var(--surface2); }
+
+  .song-number {
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 24px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .song-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .status-toggle {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .status-btn {
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+
+  .status-btn:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .status-btn.active-none {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+
+  .status-btn.active-practice {
+    background: rgba(125,211,252,0.15);
+    border-color: var(--practice-color);
+    color: var(--practice-color);
+  }
+
+  .status-btn.active-done {
+    background: rgba(134,239,172,0.15);
+    border-color: var(--done-color);
+    color: var(--done-color);
+  }
+
+  /* ─── VIEW SCREEN ─── */
+  #screen-view {
+    padding: 24px 0 80px;
+  }
+
+  .view-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px 10px 40px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text-muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .result-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+  }
+
+  thead tr {
+    background: var(--surface2);
+  }
+
+  th {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th.song-col {
+    text-align: left;
+    min-width: 180px;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    text-align: center;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  td.song-cell {
+    text-align: left;
+    font-weight: 500;
+  }
+
+  td.rank-cell {
+    color: var(--text-muted);
+    font-size: 11px;
+    width: 36px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .status-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .chip-none {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+  }
+
+  .chip-practice {
+    background: rgba(125,211,252,0.12);
+    color: var(--practice-color);
+  }
+
+  .chip-done {
+    background: rgba(134,239,172,0.12);
+    color: var(--done-color);
+  }
+
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--done-color));
+    transition: width 0.4s ease;
+  }
+
+  .song-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .song-progress-col {
+    min-width: 80px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .status-toggle { gap: 4px; }
+    .status-btn { padding: 4px 8px; font-size: 10px; }
+    .song-name { font-size: 13px; }
+    h1 { font-size: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-label">Team Cheer Song Tracker</div>
+    <h1>응원곡<br>진행도</h1>
+    <p class="subtitle">이름을 선택해 진행도를 업데이트하세요</p>
+  </header>
+
+  <!-- ── HOME SCREEN ── -->
+  <div id="screen-home" class="screen active">
+    <p class="section-title">팀원 선택</p>
+    <div class="member-grid" id="member-grid"></div>
+    <hr class="divider">
+    <button class="view-all-btn" onclick="goView()">📊 전체 진행도 확인</button>
+  </div>
+
+  <!-- ── EDIT SCREEN ── -->
+  <div id="screen-edit" class="screen">
+    <button class="back-btn" onclick="goHome()">← 뒤로</button>
+    <div class="edit-header">
+      <div class="edit-name" id="edit-name-label"></div>
+      <div class="edit-desc">응원곡을 선택해 진행 상태를 변경하세요. 변경 즉시 저장됩니다.</div>
+    </div>
+    <div class="save-banner" id="save-banner">✓ 저장되었습니다</div>
+    <div class="song-list" id="song-list"></div>
+  </div>
+
+  <!-- ── VIEW SCREEN ── -->
+  <div id="screen-view" class="screen">
+    <button class="back-btn" onclick="goHome()">← 뒤로</button>
+    <div class="view-controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="응원곡 검색..." oninput="renderTable()">
+      </div>
+      <span class="result-count" id="result-count"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="table-head"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG & DATA ───────────────────────────────────────────────
+const OWNER  = 'YOUR_GITHUB_USERNAME';   // ← 수정 필요
+const REPO   = 'YOUR_REPO_NAME';         // ← 수정 필요
+const BRANCH = 'main';
+const CONFIG_PATH   = 'config.json';
+const PROGRESS_PATH = 'progress.json';
+
+let config   = null;   // { members, songs, statuses }
+let progress = null;   // { progress: { memberName: { songName: status } } }
+let token    = localStorage.getItem('gh_token') || '';
+let currentMember = null;
+
+// Status key mapping
+const STATUS_MAP = {
+  '미완성': 'none',
+  '연습중': 'practice',
+  '완성':   'done'
+};
+const STATUS_LABEL = { none: '미완성', practice: '연습중', done: '완성' };
+const STATUS_CLASS = { none: 'chip-none', practice: 'chip-practice', done: 'chip-done' };
+const BTN_CLASS    = { none: 'active-none', practice: 'active-practice', done: 'active-done' };
+
+// ─── INIT ────────────────────────────────────────────────────────
+async function init() {
+  try {
+    await loadConfig();
+    await loadProgress();
+    renderHome();
+  } catch(e) {
+    console.error(e);
+    alert('데이터 로드 실패: GitHub 설정을 확인하세요.\n' + e.message);
+  }
+}
+
+async function fetchJSON(path) {
+  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}?t=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${path} 로드 실패 (${res.status})`);
+  return res.json();
+}
+
+async function loadConfig()   { config   = await fetchJSON(CONFIG_PATH); }
+async function loadProgress() { progress = await fetchJSON(PROGRESS_PATH); }
+
+function getStatus(member, song) {
+  return progress?.progress?.[member]?.[song] || 'none';
+}
+
+// ─── GITHUB SAVE ─────────────────────────────────────────────────
+async function saveProgress() {
+  if (!token) {
+    token = prompt('GitHub Personal Access Token을 입력하세요 (최초 1회):');
+    if (!token) return;
+    localStorage.setItem('gh_token', token);
+  }
+  try {
+    // Get current SHA
+    const metaRes = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const meta = await metaRes.json();
+    const sha  = meta.sha;
+
+    // Commit updated progress
+    const body = JSON.stringify({ progress: progress.progress }, null, 2);
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Update: ${currentMember} 진행도`,
+          content: btoa(unescape(encodeURIComponent(body))),
+          sha
+        })
+      }
+    );
+    if (!commitRes.ok) throw new Error('저장 실패');
+    showSaveBanner();
+  } catch(e) {
+    console.error(e);
+    alert('저장 실패: ' + e.message);
+  }
+}
+
+function showSaveBanner() {
+  const b = document.getElementById('save-banner');
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 2500);
+}
+
+// ─── HOME SCREEN ─────────────────────────────────────────────────
+function renderHome() {
+  const grid = document.getElementById('member-grid');
+  grid.innerHTML = '';
+  config.members.forEach(name => {
+    const songs = config.songs;
+    const done     = songs.filter(s => getStatus(name, s) === 'done').length;
+    const practice = songs.filter(s => getStatus(name, s) === 'practice').length;
+    const none     = songs.length - done - practice;
+
+    const card = document.createElement('div');
+    card.className = 'member-card';
+    card.innerHTML = `
+      <div class="member-name">${name}</div>
+      <div class="member-stats">
+        <span class="stat-badge done">완성 ${done}</span>
+        <span class="stat-badge practice">연습중 ${practice}</span>
+        <span class="stat-badge none">미완성 ${none}</span>
+      </div>`;
+    card.onclick = () => goEdit(name);
+    grid.appendChild(card);
+  });
+}
+
+// ─── EDIT SCREEN ─────────────────────────────────────────────────
+function goEdit(name) {
+  currentMember = name;
+  document.getElementById('edit-name-label').textContent = name;
+  document.getElementById('save-banner').classList.remove('show');
+
+  const list = document.getElementById('song-list');
+  list.innerHTML = '';
+
+  config.songs.forEach((song, i) => {
+    const cur = getStatus(name, song);
+    const row = document.createElement('div');
+    row.className = 'song-row';
+    row.innerHTML = `
+      <span class="song-number">${i + 1}</span>
+      <span class="song-name">${song}</span>
+      <div class="status-toggle" data-song="${song}">
+        ${config.statuses.map(s => {
+          const key = STATUS_MAP[s];
+          return `<button class="status-btn ${cur === key ? BTN_CLASS[key] : ''}"
+                          data-status="${key}"
+                          onclick="setStatus('${name}','${song}','${key}',this)">
+                    ${s}
+                  </button>`;
+        }).join('')}
+      </div>`;
+    list.appendChild(row);
+  });
+
+  showScreen('edit');
+}
+
+function setStatus(member, song, status, btn) {
+  // Update data
+  if (!progress.progress[member]) progress.progress[member] = {};
+  progress.progress[member][song] = status;
+
+  // Update buttons UI
+  const toggle = btn.closest('.status-toggle');
+  toggle.querySelectorAll('.status-btn').forEach(b => {
+    b.classList.remove('active-none','active-practice','active-done');
+  });
+  btn.classList.add(BTN_CLASS[status]);
+
+  // Debounced save
+  clearTimeout(btn._saveTimer);
+  btn._saveTimer = setTimeout(() => {
+    saveProgress();
+    renderHome(); // refresh stats
+  }, 800);
+}
+
+// ─── VIEW SCREEN ─────────────────────────────────────────────────
+function goView() {
+  buildTableHead();
+  renderTable();
+  showScreen('view');
+}
+
+function buildTableHead() {
+  const tr = document.getElementById('table-head');
+  tr.innerHTML = `
+    <th style="width:36px"></th>
+    <th class="song-col">응원곡</th>
+    <th class="song-progress-col">완료율</th>
+    ${config.members.map(m => `<th>${m}</th>`).join('')}`;
+}
+
+function renderTable() {
+  const query = document.getElementById('search-input').value.trim().toLowerCase();
+  const tbody = document.getElementById('table-body');
+  const countEl = document.getElementById('result-count');
+
+  // Score = done*2 + practice*1 (정렬 기준)
+  let rows = config.songs.map(song => {
+    const statuses = config.members.map(m => getStatus(m, song));
+    const score = statuses.reduce((acc, s) => acc + (s === 'done' ? 2 : s === 'practice' ? 1 : 0), 0);
+    const doneCount = statuses.filter(s => s === 'done').length;
+    const pct = Math.round((doneCount / config.members.length) * 100);
+    return { song, statuses, score, pct };
+  });
+
+  // Filter
+  if (query) rows = rows.filter(r => r.song.toLowerCase().includes(query));
+
+  // Sort by score desc
+  rows.sort((a, b) => b.score - a.score);
+
+  countEl.textContent = `${rows.length}개 곡`;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${3 + config.members.length}" class="no-results">검색 결과가 없습니다</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td class="rank-cell">${i + 1}</td>
+      <td class="song-cell">${highlight(r.song, query)}</td>
+      <td>
+        <div style="font-size:11px;color:var(--text-muted);text-align:center">${r.pct}%</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" style="width:${r.pct}%"></div></div>
+      </td>
+      ${r.statuses.map(s => `
+        <td><span class="status-chip ${STATUS_CLASS[s]}">${STATUS_LABEL[s]}</span></td>
+      `).join('')}
+    </tr>`).join('');
+}
+
+function highlight(text, query) {
+  if (!query) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(regex, '<mark style="background:rgba(200,162,255,0.3);color:var(--accent);border-radius:2px;padding:0 2px">$1</mark>');
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goHome() {
+  renderHome();
+  showScreen('home');
+}
+
+// ─── START ───────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
