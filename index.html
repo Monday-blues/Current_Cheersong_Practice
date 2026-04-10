@@ -638,24 +638,37 @@ const PASS_LABEL   = { pass: '통과', fail: '미통과' };
 async function init() {
   try {
     await loadConfig();
+  } catch(e) {
+    alert('config.json 로드 실패\n' + e.message); return;
+  }
+  try {
     await loadProgress();
+  } catch(e) {
+    alert('progress.json 로드 실패\n' + e.message); return;
+  }
+  try {
     renderHome();
   } catch(e) {
-    alert('데이터 로드 실패: GitHub 설정을 확인하세요.\n' + e.message);
+    alert('renderHome 실패\n' + e.message); return;
   }
 }
 
 async function fetchJSON(path) {
   const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}?t=${Date.now()}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`${path} 로드 실패 (${res.status})`);
-  return res.json();
+  if (!res.ok) throw new Error(`${path} 로드 실패 (HTTP ${res.status})`);
+  // res.json() 대신 text → JSON.parse 로 한글 파싱 오류 방지
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch(parseErr) {
+    throw new Error(`${path} JSON 파싱 실패: ${parseErr.message} | 내용: ${text.slice(0, 300)}`);
+  }
 }
 
 async function loadConfig() { config = await fetchJSON(CONFIG_PATH); }
 async function loadProgress() {
   const data = await fetchJSON(PROGRESS_PATH);
-  // 이전 버전 호환: pass 필드 없으면 빈 객체로 초기화
   if (!data.progress) data.progress = {};
   if (!data.pass)     data.pass     = {};
   progress = data;
