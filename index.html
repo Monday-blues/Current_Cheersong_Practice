@@ -657,12 +657,16 @@ async function fetchJSON(path) {
   const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}?t=${Date.now()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${path} 로드 실패 (HTTP ${res.status})`);
-  // res.json() 대신 text → JSON.parse 로 한글 파싱 오류 방지
-  const text = await res.text();
+  // ArrayBuffer로 받아서 UTF-8 디코딩 → BOM 제거 → JSON.parse
+  const buf = await res.arrayBuffer();
+  let text = new TextDecoder('utf-8').decode(buf);
+  // BOM 제거 (U+FEFF)
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  text = text.trim();
   try {
     return JSON.parse(text);
   } catch(parseErr) {
-    throw new Error(`${path} JSON 파싱 실패: ${parseErr.message} | 내용: ${text.slice(0, 300)}`);
+    throw new Error(`${path} JSON 파싱 실패: ${parseErr.message}`);
   }
 }
 
