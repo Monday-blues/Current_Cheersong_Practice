@@ -7,490 +7,546 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c27;
-    --border: #2a2a3a;
-    --accent: #c8a2ff;
-    --accent2: #7dd3fc;
-    --accent3: #86efac;
-    --text: #e8e8f0;
-    --text-muted: #6b6b85;
-    --none-color: #3a3a4a;
-    --practice-color: #7dd3fc;
-    --done-color: #86efac;
-    --radius: 12px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(200,162,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(200,162,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* Header */
-  header {
-    padding: 48px 0 32px;
-    text-align: center;
-  }
-
-  .header-label {
-    font-size: 11px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
-    font-weight: 500;
-  }
-
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(48px, 8vw, 96px);
-    letter-spacing: 2px;
-    line-height: 1;
-    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .subtitle {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 12px;
-    letter-spacing: 1px;
-  }
-
-  /* ─── SCREEN SYSTEM ─── */
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* ─── HOME SCREEN ─── */
-  #screen-home {
-    padding: 24px 0 80px;
-  }
-
-  .section-title {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    padding-left: 4px;
-  }
-
-  .member-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .member-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .member-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-
-  .member-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(200,162,255,0.12);
-  }
-
-  .member-card:hover::before { transform: scaleX(1); }
-
-  .member-name {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .member-stats {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .stat-badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 100px;
-    font-weight: 500;
-  }
-
-  .stat-badge.done { background: rgba(134,239,172,0.15); color: var(--done-color); }
-  .stat-badge.practice { background: rgba(125,211,252,0.15); color: var(--practice-color); }
-  .stat-badge.none { background: rgba(255,255,255,0.05); color: var(--text-muted); }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 20px 0;
-  }
-
-  .view-all-btn {
-    width: 100%;
-    padding: 18px;
-    background: transparent;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-    color: var(--text-muted);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    letter-spacing: 1px;
-  }
-
-  .view-all-btn:hover {
-    border-color: var(--accent2);
-    color: var(--accent2);
-    background: rgba(125,211,252,0.05);
-  }
-
-  /* ─── EDIT SCREEN ─── */
-  #screen-edit {
-    padding: 24px 0 80px;
-  }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    margin-bottom: 32px;
-    padding: 8px 0;
-    background: none;
-    border: none;
-    font-family: 'Noto Sans KR', sans-serif;
-    transition: color 0.2s;
-  }
-
-  .back-btn:hover { color: var(--text); }
-
-  .edit-header {
-    margin-bottom: 32px;
-  }
-
-  .edit-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 48px;
-    color: var(--accent);
-    letter-spacing: 2px;
-    line-height: 1;
-  }
-
-  .edit-desc {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 8px;
-  }
-
-  .save-banner {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    background: rgba(134,239,172,0.1);
-    border: 1px solid rgba(134,239,172,0.3);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--done-color);
-    margin-bottom: 24px;
-  }
-  .save-banner.show { display: flex; }
-
-  .song-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .song-row {
-    display: flex;
-    align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    gap: 16px;
-    transition: border-color 0.2s;
-  }
-
-  .song-row:hover { border-color: var(--surface2); }
-
-  .song-number {
-    font-size: 11px;
-    color: var(--text-muted);
-    width: 24px;
-    flex-shrink: 0;
-    text-align: right;
-  }
-
-  .song-name {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .status-toggle {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .status-btn {
-    padding: 5px 12px;
-    border-radius: 100px;
-    border: 1px solid var(--border);
-    background: transparent;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 11px;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.15s ease;
-    font-weight: 500;
-  }
-
-  .status-btn:hover { border-color: var(--text-muted); color: var(--text); }
-
-  .status-btn.active-none {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.2);
-    color: var(--text);
-  }
-
-  .status-btn.active-practice {
-    background: rgba(125,211,252,0.15);
-    border-color: var(--practice-color);
-    color: var(--practice-color);
-  }
-
-  .status-btn.active-done {
-    background: rgba(134,239,172,0.15);
-    border-color: var(--done-color);
-    color: var(--done-color);
-  }
-
-  /* ─── VIEW SCREEN ─── */
-  #screen-view {
-    padding: 24px 0 80px;
-  }
-
-  .view-controls {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .search-box {
-    flex: 1;
-    min-width: 200px;
-    position: relative;
-  }
-
-  .search-box input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px 10px 40px;
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .search-box input:focus { border-color: var(--accent); }
-  .search-box input::placeholder { color: var(--text-muted); }
-
-  .search-icon {
-    position: absolute;
-    left: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 14px;
-    pointer-events: none;
-  }
-
-  .result-count {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-
-  /* Table */
-  .table-wrap {
-    overflow-x: auto;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-  }
-
-  thead tr {
-    background: var(--surface2);
-  }
-
-  th {
-    padding: 12px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  th.song-col {
-    text-align: left;
-    min-width: 180px;
-  }
-
-  td {
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(42,42,58,0.5);
-    text-align: center;
-    font-size: 13px;
-    vertical-align: middle;
-  }
-
-  td.song-cell {
-    text-align: left;
-    font-weight: 500;
-  }
-
-  td.rank-cell {
-    color: var(--text-muted);
-    font-size: 11px;
-    width: 36px;
-  }
-
-  tr:last-child td { border-bottom: none; }
-
-  tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .status-chip {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 500;
-  }
-
-  .chip-none {
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted);
-  }
-
-  .chip-practice {
-    background: rgba(125,211,252,0.12);
-    color: var(--practice-color);
-  }
-
-  .chip-done {
-    background: rgba(134,239,172,0.12);
-    color: var(--done-color);
-  }
-
-  .progress-bar-wrap {
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 4px;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--accent2), var(--done-color));
-    transition: width 0.4s ease;
-  }
-
-  .song-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .song-progress-col {
-    min-width: 80px;
-  }
-
-  .no-results {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    .status-toggle { gap: 4px; }
-    .status-btn { padding: 4px 8px; font-size: 10px; }
-    .song-name { font-size: 13px; }
-    h1 { font-size: 56px; }
-  }
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c27;
+  --border: #2a2a3a;
+  --accent: #c8a2ff;
+  --accent2: #7dd3fc;
+  --accent3: #86efac;
+  --text: #e8e8f0;
+  --text-muted: #6b6b85;
+  --none-color: #3a3a4a;
+  --practice-color: #7dd3fc;
+  --done-color: #86efac;
+  --pass-color: #86efac;
+  --fail-color: #f87171;
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,162,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,162,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header */
+header {
+  padding: 48px 0 32px;
+  text-align: center;
+}
+.header-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 8vw, 96px);
+  letter-spacing: 2px;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  letter-spacing: 1px;
+}
+
+/* ─── SCREEN SYSTEM ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── HOME SCREEN ─── */
+#screen-home { padding: 24px 0 80px; }
+
+.section-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  padding-left: 4px;
+}
+
+.member-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.member-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.member-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.member-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(200,162,255,0.12);
+}
+.member-card:hover::before { transform: scaleX(1); }
+
+.member-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.member-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stat-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 500;
+}
+.stat-badge.done    { background: rgba(134,239,172,0.15); color: var(--done-color); }
+.stat-badge.practice{ background: rgba(125,211,252,0.15); color: var(--practice-color); }
+.stat-badge.none    { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+.stat-badge.pass    { background: rgba(134,239,172,0.15); color: var(--pass-color); }
+.stat-badge.fail    { background: rgba(248,113,113,0.15); color: var(--fail-color); }
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+.view-all-btn {
+  width: 100%;
+  padding: 18px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+}
+.view-all-btn:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(125,211,252,0.05);
+}
+
+/* ─── EDIT SCREEN ─── */
+#screen-edit { padding: 24px 0 80px; }
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 32px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: color 0.2s;
+}
+.back-btn:hover { color: var(--text); }
+
+.edit-header { margin-bottom: 32px; }
+.edit-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.edit-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ─── BANNERS ─── */
+.banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.banner.show { display: flex; }
+
+.banner-success {
+  background: rgba(134,239,172,0.1);
+  border: 1px solid rgba(134,239,172,0.3);
+  color: var(--done-color);
+}
+
+.banner-error {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  color: var(--fail-color);
+  justify-content: space-between;
+}
+
+.banner-warning {
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.3);
+  color: #fbbf24;
+  justify-content: space-between;
+}
+
+.retry-btn {
+  padding: 4px 12px;
+  background: rgba(248,113,113,0.2);
+  border: 1px solid rgba(248,113,113,0.4);
+  border-radius: 6px;
+  color: var(--fail-color);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.retry-btn:hover { background: rgba(248,113,113,0.3); }
+
+.merge-btn {
+  padding: 4px 12px;
+  background: rgba(251,191,36,0.2);
+  border: 1px solid rgba(251,191,36,0.4);
+  border-radius: 6px;
+  color: #fbbf24;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.merge-btn:hover { background: rgba(251,191,36,0.3); }
+
+/* ─── SONG LIST ─── */
+.song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.song-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+.song-row:hover { border-color: var(--surface2); }
+
+.song-row-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.song-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.song-number {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 24px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.song-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ─── STATUS TOGGLE (연습 상태) ─── */
+.status-toggle {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.status-btn {
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+.status-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.status-btn.active-none     { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: var(--text); }
+.status-btn.active-practice { background: rgba(125,211,252,0.15); border-color: var(--practice-color); color: var(--practice-color); }
+.status-btn.active-done     { background: rgba(134,239,172,0.15); border-color: var(--done-color); color: var(--done-color); }
+
+/* ─── PASS TOGGLE (통과 여부) ─── */
+.pass-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pass-toggle {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pass-btn {
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+.pass-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.pass-btn.active-pass { background: rgba(134,239,172,0.15); border-color: var(--pass-color); color: var(--pass-color); }
+.pass-btn.active-fail { background: rgba(248,113,113,0.15); border-color: var(--fail-color); color: var(--fail-color); }
+
+/* 통과 여부가 설정된 곡 row 강조 */
+.song-row.has-pass  { border-left: 2px solid var(--pass-color); }
+.song-row.has-fail  { border-left: 2px solid var(--fail-color); }
+
+/* ─── VIEW SCREEN ─── */
+#screen-view { padding: 24px 0 80px; }
+
+.view-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.search-box input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px 10px 40px;
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.result-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+thead tr { background: var(--surface2); }
+th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+th.song-col { text-align: left; min-width: 180px; }
+
+td {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(42,42,58,0.5);
+  text-align: center;
+  font-size: 13px;
+  vertical-align: middle;
+}
+td.song-cell { text-align: left; font-weight: 500; }
+td.rank-cell { color: var(--text-muted); font-size: 11px; width: 36px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.chip-none     { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+.chip-practice { background: rgba(125,211,252,0.12); color: var(--practice-color); }
+.chip-done     { background: rgba(134,239,172,0.12); color: var(--done-color); }
+
+/* 통과/미통과 칩 */
+.pass-chip {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.pass-chip.chip-pass { background: rgba(134,239,172,0.18); color: var(--pass-color); }
+.pass-chip.chip-fail { background: rgba(248,113,113,0.18); color: var(--fail-color); }
+
+.cell-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.progress-bar-wrap {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent2), var(--done-color));
+  transition: width 0.4s ease;
+}
+.song-meta { display: flex; align-items: center; gap: 10px; }
+.song-progress-col { min-width: 80px; }
+
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Saving spinner */
+.saving-indicator {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.saving-indicator.show { display: flex; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .status-toggle { gap: 4px; }
+  .status-btn { padding: 4px 8px; font-size: 10px; }
+  .pass-btn   { padding: 4px 8px; font-size: 10px; }
+  .song-name  { font-size: 13px; }
+  h1 { font-size: 56px; }
+  .song-row-bottom { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
-
 <div class="container">
   <header>
     <div class="header-label">Team Cheer Song Tracker</div>
@@ -511,9 +567,30 @@
     <button class="back-btn" onclick="goHome()">← 뒤로</button>
     <div class="edit-header">
       <div class="edit-name" id="edit-name-label"></div>
-      <div class="edit-desc">응원곡을 선택해 진행 상태를 변경하세요. 변경 즉시 저장됩니다.</div>
+      <div class="edit-desc">응원곡을 선택해 진행 상태와 통과 여부를 변경하세요. 변경 즉시 저장됩니다.</div>
     </div>
-    <div class="save-banner" id="save-banner">✓ 저장되었습니다</div>
+
+    <!-- 저장 중 -->
+    <div class="saving-indicator" id="saving-indicator">
+      <div class="spinner"></div>
+      <span>저장 중...</span>
+    </div>
+
+    <!-- 저장 성공 -->
+    <div class="banner banner-success" id="banner-success">✓ 저장되었습니다</div>
+
+    <!-- 저장 실패 -->
+    <div class="banner banner-error" id="banner-error">
+      <span id="error-msg">저장 실패</span>
+      <button class="retry-btn" id="retry-btn" onclick="retrySave()">↺ 재시도</button>
+    </div>
+
+    <!-- 충돌 감지 -->
+    <div class="banner banner-warning" id="banner-conflict">
+      <span>⚠ 다른 사람이 먼저 저장했습니다. 내 변경사항을 병합하여 저장할까요?</span>
+      <button class="merge-btn" id="merge-btn" onclick="mergeAndSave()">병합 저장</button>
+    </div>
+
     <div class="song-list" id="song-list"></div>
   </div>
 
@@ -529,9 +606,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr id="table-head"></tr>
-        </thead>
+        <thead><tr id="table-head"></tr></thead>
         <tbody id="table-body"></tbody>
       </table>
     </div>
@@ -539,21 +614,25 @@
 </div>
 
 <script>
-// ─── CONFIG & DATA ───────────────────────────────────────────────
-const OWNER  = 'Monday-blues';   // ← 수정 필요
-const REPO   = 'Current_Cheersong_Practice';         // ← 수정 필요
-const BRANCH = 'main';
-const CONFIG_PATH   = 'config.json';
-const PROGRESS_PATH = 'progress.json';
+// ─── CONFIG ──────────────────────────────────────────────────────
+const OWNER        = 'Monday-blues';
+const REPO         = 'Current_Cheersong_Practice';
+const BRANCH       = 'main';
+const CONFIG_PATH  = 'config.json';
+const PROGRESS_PATH= 'progress.json';
 
 let config        = null;
-let progress      = null;
+let progress      = null;   // { progress: {...}, pass: {...} }
 let currentMember = null;
+
+// 저장 실패 시 재시도용 보류 데이터
+let pendingSave   = null;   // { progressSnap, passSnap }
 
 const STATUS_MAP   = { '미완성': 'none', '연습중': 'practice', '완성': 'done' };
 const STATUS_LABEL = { none: '미완성', practice: '연습중', done: '완성' };
 const STATUS_CLASS = { none: 'chip-none', practice: 'chip-practice', done: 'chip-done' };
 const BTN_CLASS    = { none: 'active-none', practice: 'active-practice', done: 'active-done' };
+const PASS_LABEL   = { pass: '통과', fail: '미통과' };
 
 // ─── INIT ────────────────────────────────────────────────────────
 async function init() {
@@ -579,8 +658,11 @@ async function loadProgress() { progress = await fetchJSON(PROGRESS_PATH); }
 function getStatus(member, song) {
   return progress?.progress?.[member]?.[song] || 'none';
 }
+function getPass(member, song) {
+  return progress?.pass?.[member]?.[song] || null; // null | 'pass' | 'fail'
+}
 
-// ─── GITHUB SAVE ─────────────────────────────────────────────────
+// ─── TOKEN ───────────────────────────────────────────────────────
 function getToken() {
   let tok = localStorage.getItem('gh_tok');
   if (!tok) {
@@ -591,48 +673,164 @@ function getToken() {
   return tok;
 }
 
+// ─── GITHUB: 파일 정보(SHA + 최신 내용) 가져오기 ────────────────
+async function fetchFileInfo(tok) {
+  const res = await fetch(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
+    { headers: { Authorization: `Bearer ${tok}` } }
+  );
+  if (res.status === 401) {
+    localStorage.removeItem('gh_tok');
+    throw new Error('AUTH_FAIL');
+  }
+  if (!res.ok) throw new Error('파일 정보 조회 실패');
+  const meta = await res.json();
+  // base64 디코딩 → JSON
+  const decoded = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,'')))));
+  return { sha: meta.sha, remote: decoded };
+}
+
+// ─── GITHUB: 커밋 ────────────────────────────────────────────────
+async function commitProgress(tok, sha, data, message) {
+  const body = JSON.stringify(data, null, 2);
+  const res = await fetch(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        content: btoa(unescape(encodeURIComponent(body))),
+        sha
+      })
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    // SHA 충돌 (409 or "does not match")
+    if (res.status === 409 || (err.message && err.message.includes('does not match'))) {
+      throw new Error('CONFLICT');
+    }
+    throw new Error('저장 실패: ' + (err.message || res.status));
+  }
+}
+
+// ─── 로컬 + 원격 병합 ────────────────────────────────────────────
+// 전략: 현재 멤버의 변경사항만 원격 데이터 위에 덮어씀 (타인 변경은 보존)
+function mergeData(remote, localProgress, localPass, member) {
+  const merged = JSON.parse(JSON.stringify(remote)); // deep copy
+  if (!merged.progress) merged.progress = {};
+  if (!merged.pass)     merged.pass     = {};
+  merged.progress[member] = localProgress[member] || {};
+  merged.pass[member]     = localPass[member]      || {};
+  return merged;
+}
+
+// ─── SAVE FLOW ───────────────────────────────────────────────────
 async function saveProgress() {
   const tok = getToken();
   if (!tok) return;
 
+  // 현재 로컬 상태 스냅샷
+  const snap = {
+    progressSnap: JSON.parse(JSON.stringify(progress.progress || {})),
+    passSnap:     JSON.parse(JSON.stringify(progress.pass     || {}))
+  };
+
+  showSaving(true);
+  hideBanners();
+  pendingSave = snap; // 실패 시 재시도에 사용
+
   try {
-    const metaRes = await fetch(
-      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
-      { headers: { Authorization: `Bearer ${tok}` } }
-    );
-    // 토큰이 틀렸으면 저장된 토큰 삭제 후 안내
-    if (metaRes.status === 401) {
-      localStorage.removeItem('gh_tok');
-      alert('토큰이 유효하지 않습니다. 다음 저장 시 다시 입력해 주세요.');
+    const { sha, remote } = await fetchFileInfo(tok);
+
+    // 로컬 데이터를 원격 위에 병합 (현재 멤버 항목만 덮어씀)
+    const merged = mergeData(remote, snap.progressSnap, snap.passSnap, currentMember);
+
+    await commitProgress(tok, sha, merged, `Update: ${currentMember} 진행도`);
+
+    // 로컬 progress도 병합된 최신으로 업데이트
+    progress = merged;
+
+    showSaving(false);
+    showBanner('success');
+    pendingSave = null;
+
+  } catch(e) {
+    showSaving(false);
+
+    if (e.message === 'AUTH_FAIL') {
+      showError('토큰이 유효하지 않습니다. 다음 저장 시 다시 입력해주세요.');
       return;
     }
-    if (!metaRes.ok) throw new Error('파일 정보 조회 실패');
-    const { sha } = await metaRes.json();
-
-    const body = JSON.stringify({ progress: progress.progress }, null, 2);
-    const commitRes = await fetch(
-      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PROGRESS_PATH}`,
-      {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Update: ${currentMember} 진행도`,
-          content: btoa(unescape(encodeURIComponent(body))),
-          sha
-        })
-      }
-    );
-    if (!commitRes.ok) throw new Error('저장 실패');
-    showSaveBanner();
-  } catch(e) {
-    alert('저장 실패: ' + e.message);
+    if (e.message === 'CONFLICT') {
+      // 충돌: 원격에서 다시 읽어서 자동 병합 시도
+      showBanner('conflict');
+      return;
+    }
+    showError(e.message);
   }
 }
 
-function showSaveBanner() {
-  const b = document.getElementById('save-banner');
-  b.classList.add('show');
-  setTimeout(() => b.classList.remove('show'), 2500);
+// 충돌 시 병합 저장
+async function mergeAndSave() {
+  if (!pendingSave) return;
+  const tok = getToken();
+  if (!tok) return;
+
+  hideBanners();
+  showSaving(true);
+
+  try {
+    const { sha, remote } = await fetchFileInfo(tok);
+    const merged = mergeData(remote, pendingSave.progressSnap, pendingSave.passSnap, currentMember);
+
+    await commitProgress(tok, sha, merged, `Merge: ${currentMember} 진행도`);
+
+    progress = merged;
+    showSaving(false);
+    showBanner('success');
+    pendingSave = null;
+
+  } catch(e) {
+    showSaving(false);
+    if (e.message === 'CONFLICT') {
+      showError('병합 중 또 다른 충돌이 발생했습니다. 잠시 후 재시도해주세요.');
+      return;
+    }
+    showError(e.message);
+  }
+}
+
+// 단순 재시도
+async function retrySave() {
+  if (!pendingSave) return;
+  hideBanners();
+  await saveProgress();
+}
+
+// ─── BANNER HELPERS ──────────────────────────────────────────────
+function showSaving(on) {
+  document.getElementById('saving-indicator').classList.toggle('show', on);
+}
+
+function hideBanners() {
+  ['banner-success','banner-error','banner-conflict'].forEach(id => {
+    document.getElementById(id).classList.remove('show');
+  });
+}
+
+function showBanner(type) {
+  hideBanners();
+  document.getElementById('banner-' + type).classList.add('show');
+  if (type === 'success') {
+    setTimeout(() => document.getElementById('banner-success').classList.remove('show'), 2500);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = '저장 실패: ' + msg;
+  showBanner('error');
 }
 
 // ─── HOME SCREEN ─────────────────────────────────────────────────
@@ -643,7 +841,10 @@ function renderHome() {
     const done     = config.songs.filter(s => getStatus(name, s) === 'done').length;
     const practice = config.songs.filter(s => getStatus(name, s) === 'practice').length;
     const none     = config.songs.length - done - practice;
-    const card     = document.createElement('div');
+    const passCount= config.songs.filter(s => getPass(name, s) === 'pass').length;
+    const failCount= config.songs.filter(s => getPass(name, s) === 'fail').length;
+
+    const card = document.createElement('div');
     card.className = 'member-card';
     card.innerHTML = `
       <div class="member-name">${name}</div>
@@ -651,7 +852,13 @@ function renderHome() {
         <span class="stat-badge done">완성 ${done}</span>
         <span class="stat-badge practice">연습중 ${practice}</span>
         <span class="stat-badge none">미완성 ${none}</span>
-      </div>`;
+      </div>
+      ${passCount > 0 || failCount > 0 ? `
+      <div class="member-stats" style="margin-top:6px">
+        ${passCount > 0 ? `<span class="stat-badge pass">통과 ${passCount}</span>` : ''}
+        ${failCount > 0 ? `<span class="stat-badge fail">미통과 ${failCount}</span>` : ''}
+      </div>` : ''}
+    `;
     card.onclick = () => goEdit(name);
     grid.appendChild(card);
   });
@@ -659,36 +866,59 @@ function renderHome() {
 
 // ─── EDIT SCREEN ─────────────────────────────────────────────────
 function goEdit(name) {
+  currentMember = name;
   document.getElementById('edit-name-label').textContent = name;
-  document.getElementById('save-banner').classList.remove('show');
+  hideBanners();
+  showSaving(false);
 
   const list = document.getElementById('song-list');
   list.innerHTML = '';
 
   config.songs.forEach((song, i) => {
-    const cur = getStatus(name, song);
+    const curStatus = getStatus(name, song);
+    const curPass   = getPass(name, song); // null | 'pass' | 'fail'
+
     const row = document.createElement('div');
-    row.className = 'song-row';
+    row.className = 'song-row' + (curPass === 'pass' ? ' has-pass' : curPass === 'fail' ? ' has-fail' : '');
+    row.id = `row-${i}`;
+
     row.innerHTML = `
-      <span class="song-number">${i + 1}</span>
-      <span class="song-name">${song}</span>
-      <div class="status-toggle" data-song="${song}">
-        ${config.statuses.map(s => {
-          const key = STATUS_MAP[s];
-          return `<button class="status-btn ${cur === key ? BTN_CLASS[key] : ''}"
-                          data-status="${key}"
-                          onclick="setStatus('${name}','${song}','${key}',this)">
-                    ${s}
-                  </button>`;
-        }).join('')}
-      </div>`;
+      <!-- 위쪽: 번호 + 곡명 + 연습상태 버튼 -->
+      <div class="song-row-top">
+        <span class="song-number">${i + 1}</span>
+        <span class="song-name">${song}</span>
+        <div class="status-toggle" data-song="${song}">
+          ${config.statuses.map(s => {
+            const key = STATUS_MAP[s];
+            return `<button class="status-btn ${curStatus === key ? BTN_CLASS[key] : ''}"
+                      data-status="${key}"
+                      onclick="setStatus('${name}','${song}','${key}',this,${i})">
+                      ${s}
+                    </button>`;
+          }).join('')}
+        </div>
+      </div>
+      <!-- 아래쪽: 통과 여부 -->
+      <div class="song-row-bottom">
+        <span class="pass-label">통과 여부</span>
+        <div class="pass-toggle" data-song="${song}">
+          <button class="pass-btn ${curPass === 'pass' ? 'active-pass' : ''}"
+                  onclick="setPass('${name}','${song}','pass',this,${i})">통과</button>
+          <button class="pass-btn ${curPass === 'fail' ? 'active-fail' : ''}"
+                  onclick="setPass('${name}','${song}','fail',this,${i})">미통과</button>
+        </div>
+      </div>
+    `;
+
     list.appendChild(row);
   });
 
   showScreen('edit');
 }
 
-function setStatus(member, song, status, btn) {
+// ─── SET STATUS (연습 상태) ───────────────────────────────────────
+function setStatus(member, song, status, btn, rowIdx) {
+  if (!progress.progress)         progress.progress = {};
   if (!progress.progress[member]) progress.progress[member] = {};
   progress.progress[member][song] = status;
 
@@ -698,6 +928,38 @@ function setStatus(member, song, status, btn) {
   });
   btn.classList.add(BTN_CLASS[status]);
 
+  scheduleSave();
+}
+
+// ─── SET PASS (통과 여부) ────────────────────────────────────────
+function setPass(member, song, value, btn, rowIdx) {
+  if (!progress.pass)         progress.pass = {};
+  if (!progress.pass[member]) progress.pass[member] = {};
+
+  const toggle = btn.closest('.pass-toggle');
+  const currentVal = progress.pass[member][song];
+  const row = document.getElementById(`row-${rowIdx}`);
+
+  if (currentVal === value) {
+    // 같은 버튼 다시 누르면 해제
+    delete progress.pass[member][song];
+    btn.classList.remove('active-pass','active-fail');
+    row.classList.remove('has-pass','has-fail');
+  } else {
+    progress.pass[member][song] = value;
+    toggle.querySelectorAll('.pass-btn').forEach(b => {
+      b.classList.remove('active-pass','active-fail');
+    });
+    btn.classList.add(value === 'pass' ? 'active-pass' : 'active-fail');
+    row.classList.remove('has-pass','has-fail');
+    row.classList.add(value === 'pass' ? 'has-pass' : 'has-fail');
+  }
+
+  scheduleSave();
+}
+
+// ─── DEBOUNCED SAVE ───────────────────────────────────────────────
+function scheduleSave() {
   clearTimeout(window._saveTimer);
   window._saveTimer = setTimeout(() => {
     saveProgress();
@@ -721,21 +983,21 @@ function buildTableHead() {
 }
 
 function renderTable() {
-  const query   = document.getElementById('search-input').value.trim().toLowerCase();
-  const tbody   = document.getElementById('table-body');
-  const countEl = document.getElementById('result-count');
+  const query  = document.getElementById('search-input').value.trim().toLowerCase();
+  const tbody  = document.getElementById('table-body');
+  const countEl= document.getElementById('result-count');
 
   let rows = config.songs.map(song => {
-    const statuses  = config.members.map(m => getStatus(m, song));
-    const score     = statuses.reduce((a, s) => a + (s==='done'?2:s==='practice'?1:0), 0);
-    const doneCount = statuses.filter(s => s === 'done').length;
-    const pct       = Math.round((doneCount / config.members.length) * 100);
-    return { song, statuses, score, pct };
+    const statuses   = config.members.map(m => getStatus(m, song));
+    const passValues = config.members.map(m => getPass(m, song));
+    const score    = statuses.reduce((a, s) => a + (s==='done'?2:s==='practice'?1:0), 0);
+    const doneCount= statuses.filter(s => s === 'done').length;
+    const pct      = Math.round((doneCount / config.members.length) * 100);
+    return { song, statuses, passValues, score, pct };
   });
 
   if (query) rows = rows.filter(r => r.song.toLowerCase().includes(query));
   rows.sort((a, b) => b.score - a.score);
-
   countEl.textContent = `${rows.length}개 곡`;
 
   if (rows.length === 0) {
@@ -751,7 +1013,18 @@ function renderTable() {
         <div style="font-size:11px;color:var(--text-muted);text-align:center">${r.pct}%</div>
         <div class="progress-bar-wrap"><div class="progress-bar" style="width:${r.pct}%"></div></div>
       </td>
-      ${r.statuses.map(s => `<td><span class="status-chip ${STATUS_CLASS[s]}">${STATUS_LABEL[s]}</span></td>`).join('')}
+      ${r.statuses.map((s, mi) => {
+        const pv = r.passValues[mi];
+        const passChip = pv
+          ? `<span class="pass-chip chip-${pv}">${pv === 'pass' ? '통과' : '미통과'}</span>`
+          : '';
+        return `<td>
+          <div class="cell-inner">
+            <span class="status-chip ${STATUS_CLASS[s]}">${STATUS_LABEL[s]}</span>
+            ${passChip}
+          </div>
+        </td>`;
+      }).join('')}
     </tr>`).join('');
 }
 
