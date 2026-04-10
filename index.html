@@ -652,8 +652,14 @@ async function fetchJSON(path) {
   return res.json();
 }
 
-async function loadConfig()   { config   = await fetchJSON(CONFIG_PATH); }
-async function loadProgress() { progress = await fetchJSON(PROGRESS_PATH); }
+async function loadConfig() { config = await fetchJSON(CONFIG_PATH); }
+async function loadProgress() {
+  const data = await fetchJSON(PROGRESS_PATH);
+  // 이전 버전 호환: pass 필드 없으면 빈 객체로 초기화
+  if (!data.progress) data.progress = {};
+  if (!data.pass)     data.pass     = {};
+  progress = data;
+}
 
 function getStatus(member, song) {
   return progress?.progress?.[member]?.[song] || 'none';
@@ -685,8 +691,19 @@ async function fetchFileInfo(tok) {
   }
   if (!res.ok) throw new Error('파일 정보 조회 실패');
   const meta = await res.json();
-  // base64 디코딩 → JSON
-  const decoded = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,'')))));
+
+  // base64 → Uint8Array → UTF-8 문자열 (한글 포함 안전하게 디코딩)
+  const b64 = meta.content.replace(/\n/g, '');
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const jsonStr = new TextDecoder('utf-8').decode(bytes);
+
+  const decoded = JSON.parse(jsonStr);
+  // 이전 버전 호환
+  if (!decoded.progress) decoded.progress = {};
+  if (!decoded.pass)     decoded.pass     = {};
+
   return { sha: meta.sha, remote: decoded };
 }
 
