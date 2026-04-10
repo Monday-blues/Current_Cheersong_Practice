@@ -654,22 +654,41 @@ async function init() {
 }
 
 async function fetchJSON(path) {
-  // GitHub Contents API로 로드 (base64 디코딩, 인코딩 문제 없음)
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
-  const res = await fetch(url, {
+  // 1차: GitHub Contents API 시도
+  const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
+  const apiRes = await fetch(apiUrl, {
     headers: { 'Accept': 'application/vnd.github.v3+json' }
   });
-  if (!res.ok) throw new Error(`${path} 로드 실패 (HTTP ${res.status})`);
-  const meta = await res.json();
-  // base64 → bytes → UTF-8
-  const b64 = meta.content.replace(/\n/g, '');
-  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  const text = new TextDecoder('utf-8').decode(bytes);
-  try {
-    return JSON.parse(text);
-  } catch(parseErr) {
-    throw new Error(`${path} JSON 파싱 실패: ${parseErr.message}`);
+  if (!apiRes.ok) throw new Error(`${path} 로드 실패 (HTTP ${apiRes.status})`);
+  const meta = await apiRes.json();
+
+  // content가 있으면 base64 디코딩
+  if (meta.content && meta.content.trim() !== '') {
+    const b64 = meta.content.replace(/\n/g, '');
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const text = new TextDecoder('utf-8').decode(bytes);
+    try {
+      return JSON.parse(text);
+    } catch(e) {
+      throw new Error(`${path} JSON 파싱 실패: ${e.message}`);
+    }
   }
+
+  // content 없으면 download_url로 fallback
+  if (meta.download_url) {
+    const dlRes = await fetch(meta.download_url + '?t=' + Date.now());
+    if (!dlRes.ok) throw new Error(`${path} download 실패 (HTTP ${dlRes.status})`);
+    const buf = await dlRes.arrayBuffer();
+    let text = new TextDecoder('utf-8').decode(buf);
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    try {
+      return JSON.parse(text.trim());
+    } catch(e) {
+      throw new Error(`${path} JSON 파싱 실패: ${e.message}`);
+    }
+  }
+
+  throw new Error(`${path} 로드 실패: content와 download_url 모두 없음`);
 }
 
 async function loadConfig() { config = await fetchJSON(CONFIG_PATH); }
