@@ -638,57 +638,18 @@ const PASS_LABEL   = { pass: '통과', fail: '미통과' };
 async function init() {
   try {
     await loadConfig();
-  } catch(e) {
-    alert('config.json 로드 실패\n' + e.message); return;
-  }
-  try {
     await loadProgress();
-  } catch(e) {
-    alert('progress.json 로드 실패\n' + e.message); return;
-  }
-  try {
     renderHome();
   } catch(e) {
-    alert('renderHome 실패\n' + e.message); return;
+    alert('데이터 로드 실패: GitHub 설정을 확인하세요.\n' + e.message);
   }
 }
 
 async function fetchJSON(path) {
-  // 1차: GitHub Contents API 시도
-  const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
-  const apiRes = await fetch(apiUrl, {
-    headers: { 'Accept': 'application/vnd.github.v3+json' }
-  });
-  if (!apiRes.ok) throw new Error(`${path} 로드 실패 (HTTP ${apiRes.status})`);
-  const meta = await apiRes.json();
-
-  // content가 있으면 base64 디코딩
-  if (meta.content && meta.content.trim() !== '') {
-    const b64 = meta.content.replace(/\n/g, '');
-    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const text = new TextDecoder('utf-8').decode(bytes);
-    try {
-      return JSON.parse(text);
-    } catch(e) {
-      throw new Error(`${path} JSON 파싱 실패: ${e.message}`);
-    }
-  }
-
-  // content 없으면 download_url로 fallback
-  if (meta.download_url) {
-    const dlRes = await fetch(meta.download_url + '?t=' + Date.now());
-    if (!dlRes.ok) throw new Error(`${path} download 실패 (HTTP ${dlRes.status})`);
-    const buf = await dlRes.arrayBuffer();
-    let text = new TextDecoder('utf-8').decode(buf);
-    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-    try {
-      return JSON.parse(text.trim());
-    } catch(e) {
-      throw new Error(`${path} JSON 파싱 실패: ${e.message}`);
-    }
-  }
-
-  throw new Error(`${path} 로드 실패: content와 download_url 모두 없음`);
+  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}?t=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${path} 로드 실패 (${res.status})`);
+  return res.json();
 }
 
 async function loadConfig() { config = await fetchJSON(CONFIG_PATH); }
