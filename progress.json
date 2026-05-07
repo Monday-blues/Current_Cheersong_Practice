@@ -79,14 +79,13 @@
       "여행을 떠나요": "done",
       "원시림": "done",
       "연세여 사랑한다": "done",
-      "흔들 흔들": "done",
+      "흔들 흔들": "practice",
       "하나되어": "done",
       "Oh My Friend": "practice",
       "에너지": "practice",
-      "친구야": "done",
-      "Ghost Busters": "done",
-      "아리요": "done",
-      "서시": "done"
+      "친구야": "practice",
+      "Ghost Busters": "practice",
+      "아리요": "practice"
     },
     "김부승": {
       "J에게": "practice",
@@ -115,6 +114,8 @@
       "J에게": "pass",
       "WOO": "fail"
     },
-    "서예은": {}
+    "서예은": {
+      "해피송": "pass"
+    }
   }
 }
